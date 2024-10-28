@@ -1,9 +1,11 @@
-import { View, Text, StyleSheet, SafeAreaView } from "react-native";
+import { View, Text, StyleSheet, SafeAreaView, ScrollView } from "react-native";
 import React from "react";
 import { TouchableOpacity } from "react-native";
+import Device from "../../components/myComponents/device";
 
 const Btn = () => {
-  return (
+  const btnNumber = 5;
+  return (<>
     <TouchableOpacity
       style={styles.button}
       onPress={() => {
@@ -15,18 +17,24 @@ const Btn = () => {
     >
       <Text style={styles.buttonText}>Create Account </Text>
     </TouchableOpacity>
-  );
+
+<SafeAreaView style={styles.container}>
+{Array.from({ length: btnNumber }, (_, index) => (
+  <Btn key={index} />
+))}
+</SafeAreaView>
+ </> );
 };
 
-const btnNumber = 5;
+
 
 export default function Home() {
   return (
-    <SafeAreaView style={styles.container}>
-      {Array.from({ length: btnNumber }, (_, index) => (
-        <Btn key={index} />
-      ))}
-    </SafeAreaView>
+    <ScrollView style={{backgroundColor:'#DE7C7D'}}>
+      <Device/>
+      <Device/>
+      <Device/>
+   </ScrollView>
   );
 }
 

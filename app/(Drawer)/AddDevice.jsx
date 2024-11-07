@@ -4,15 +4,25 @@ import {
   Button,
   ToastAndroid,
   TextInput,
-  Linking,
+  StyleSheet,
+  ActivityIndicator,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import NetInfo from "@react-native-community/netinfo";
 import { useRouter } from "expo-router";
+import RNPickerSelect from "react-native-picker-select";
+//import { getAuth } from "firebase/auth";
+import { Colors } from "./../../constants/Colors";
 import { TouchableOpacity } from "react-native";
 
+// const auth = getAuth();
+// const user = auth.currentUser;
+
 export default function AddDevice() {
-  const [url, setUrl] = useState(""); // State for storing the user-entered URL
+  const [wifiName, setWifiName] = useState(""); // State for Wi-Fi name
+  const [password, setPassword] = useState(""); // State for password
+  const [numOfDevice, setNumOfDevice] = useState(null); // State for number of devices
+  const [buttonType, setButtonType] = useState(null); // State for button type
   const [isConnected, setIsConnected] = useState(false); // State for Wi-Fi connection status
   const route = useRouter();
 
@@ -32,102 +42,174 @@ export default function AddDevice() {
   }, []);
 
   const sendData = async () => {
-    const trimmedUrl = url.trim();
-    console.log("URL entered:", trimmedUrl); // Log the current URL
-
-    if (!trimmedUrl) {
-      ToastAndroid.show("Please enter a valid URL!", ToastAndroid.SHORT);
-      console.log("No valid URL entered, stopping the request.");
+    if (!wifiName || !password || !numOfDevice || !buttonType) {
+      ToastAndroid.show("Please fill all fields!", ToastAndroid.SHORT);
       return;
     }
 
+    // JSON data format as specified
+    const jsonData = {
+      wifiname: wifiName,
+      password: password,
+      numOfDevice: numOfDevice,
+      topic: "user.email",
+      buttontype: buttonType,
+    };
+
     try {
-      console.log("Attempting to send data to:", trimmedUrl); // Log before fetch call
-      const response = await fetch(trimmedUrl, {
+      const response = await fetch("http://192.168.4.1/saveWiFi", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ssid: "Redmi",
-          password: "00000000",
-        }),
+        body: JSON.stringify(jsonData),
       });
 
-      console.log("Fetch request completed. Response status:", response.status); // Log response status
-      route.replace("/(Drawer)");
-      // Check if the response is JSON
-      const contentType = response.headers.get("content-type");
       if (response.ok) {
-        if (contentType && contentType.includes("application/json")) {
-          const jsonResponse = await response.json();
-          console.log("Response received:", jsonResponse); // Log JSON response
-          ToastAndroid.show("Data sent successfully!", ToastAndroid.SHORT);
-        } else {
-          // Handle non-JSON response
-          const textResponse = await response.text();
-          console.log("Non-JSON response received:", textResponse);
-          ToastAndroid.show(
-            "Data sent successfully, but response was not JSON.",
-            ToastAndroid.SHORT
-          );
-        }
+        ToastAndroid.show("Data sent successfully!", ToastAndroid.SHORT);
+        route.replace("/(Drawer)");
       } else {
         const errorText = await response.text();
-        console.error(
-          "Failed to send data. Status:",
-          response.status,
-          "Error:",
-          errorText
-        ); // Log error details
         ToastAndroid.show("Failed to send data!", ToastAndroid.SHORT);
+        console.error("Error:", errorText);
       }
     } catch (error) {
-      console.error("Error occurred during fetch:", error); // Log fetch error
+      console.error("Error during fetch:", error);
       ToastAndroid.show("Error occurred!", ToastAndroid.SHORT);
     }
   };
 
   if (!isConnected) {
     return (
-      <View style={styles.container}>
-        <Text style={{ marginBottom: 10 }}>
-          Please connect to the ESP Wi-Fi network and disable mobile Data a!
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: Colors.backgroundColor,
+        }}
+      >
+        <Text style={{ fontSize: 20, textAlign: "center", marginTop: "-20%" }}>
+          Please connect to the ESP Wi-Fi network and disable mobile data!
         </Text>
+        <ActivityIndicator
+          size={100}
+          style={{ marginTop: "10%" }}
+          color={Colors.btnbackgroundColor}
+        />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Text>Enter URL to send Wi-Fi data</Text>
+      <Text style={styles.title}>Enter Wi-Fi Name </Text>
       <TextInput
         style={styles.input}
-        placeholder="Enter URL"
-        value={url}
-        onChangeText={(text) => {
-          setUrl(text);
-          console.log("URL updated:", text); // Log URL every time it changes
+        placeholder="Enter Wi-Fi Name"
+        value={wifiName}
+        onChangeText={setWifiName}
+      />
+
+      <Text style={styles.title}>Enter Password</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Enter Password"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
+
+      <Text style={styles.title}>Select Number of Devices </Text>
+      <RNPickerSelect
+        onValueChange={(value) => setNumOfDevice(value)}
+        items={[
+          { label: "1 Device", value: 1 },
+          { label: "2 Devices", value: 2 },
+          { label: "3 Devices", value: 3 },
+          { label: "4 Devices", value: 4 },
+          { label: "5 Devices", value: 5 },
+        ]}
+        placeholder={{ label: "Select Number of Devices", value: null }}
+        style={{
+          inputIOS: {
+            ...styles.input,
+            paddingLeft: 10,
+          },
+          inputAndroid: {
+            ...styles.input,
+            paddingLeft: 10,
+          },
+          placeholder: styles.placeholder, // Apply the placeholder styles here
         }}
       />
-      <Button title="Send Data" onPress={sendData} />
+
+      <Text style={styles.title}>Select Button Type </Text>
+      <RNPickerSelect
+        onValueChange={(value) => setButtonType(value)}
+        items={[
+          { label: "Touch", value: "touch" },
+          { label: "Switch", value: "switch" },
+        ]}
+        placeholder={{ label: "Select Button Type", value: null }}
+        style={{
+          inputIOS: {
+            ...styles.input,
+            paddingLeft: 10,
+          },
+          inputAndroid: {
+            ...styles.input,
+            paddingLeft: 10,
+          },
+          placeholder: styles.placeholder, // Apply the placeholder styles here
+        }}
+      />
+
+      <TouchableOpacity style={styles.btn} onPress={sendData}>
+        <Text style={styles.btnText}>Config New Device </Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
-const styles = {
+const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
     alignItems: "center",
+    justifyContent: "center",
     padding: 20,
+    backgroundColor: Colors.backgroundColor,
+    marginTop: -50,
   },
   input: {
     height: 40,
-    borderColor: "gray",
+    borderColor: Colors.btnbackgroundColor,
     borderWidth: 1,
     width: "100%",
     marginVertical: 10,
     paddingHorizontal: 10,
+    borderRadius: 10,
   },
-};
+  title: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "black",
+    marginTop: "5%",
+  },
+  btn: {
+    backgroundColor: Colors.btnbackgroundColor,
+    paddingHorizontal: 25,
+    paddingVertical: 15,
+    borderRadius: 10,
+    marginTop: 10,
+  },
+  btnText: {
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  placeholder: {
+    color: "gray", // Set the placeholder label color here
+    fontSize: 30, // Set the font size for the placeholder
+    fontWeight: "bold", // Set the font weight for the placeholder
+  },
+});

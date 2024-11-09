@@ -17,11 +17,11 @@ export default function StyledImage() {
       <View>
         <Text style={styles.title}>Welcome to Smart Home Automation!</Text>
         <Text style={styles.subTitle}>
-          Bringing comfort and ease to your life with our smart technology.
+          Bringing comfort and ease to your life with our smart technology. a
         </Text>
       </View>
       <View>
-        <TouchableOpacity onPress={() => route.push("/auth/signIn")}>
+        <TouchableOpacity onPress={() => route.replace("/auth/signIn")}>
           <Text style={styles.btn}>Login </Text>
         </TouchableOpacity>
       </View>

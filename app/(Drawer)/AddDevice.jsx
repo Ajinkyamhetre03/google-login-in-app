@@ -11,12 +11,18 @@ import React, { useState, useEffect } from "react";
 import NetInfo from "@react-native-community/netinfo";
 import { useRouter } from "expo-router";
 import RNPickerSelect from "react-native-picker-select";
-//import { getAuth } from "firebase/auth";
 import { Colors } from "./../../constants/Colors";
 import { TouchableOpacity } from "react-native";
-
-// const auth = getAuth();
-// const user = auth.currentUser;
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { db } from "./../../configFireBase/configFirebase";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
 
 export default function AddDevice() {
   const [wifiName, setWifiName] = useState(""); // State for Wi-Fi name
@@ -55,8 +61,10 @@ export default function AddDevice() {
       topic: "user.email",
       buttontype: buttonType,
     };
+    route.replace("/dataToDb");
 
     try {
+      await AsyncStorage.setItem("wifiConfig", JSON.stringify(jsonData));
       const response = await fetch("http://192.168.4.1/saveWiFi", {
         method: "POST",
         headers: {
@@ -67,7 +75,7 @@ export default function AddDevice() {
 
       if (response.ok) {
         ToastAndroid.show("Data sent successfully!", ToastAndroid.SHORT);
-        route.replace("/(Drawer)");
+        route.replace("/dataToDb");
       } else {
         const errorText = await response.text();
         ToastAndroid.show("Failed to send data!", ToastAndroid.SHORT);

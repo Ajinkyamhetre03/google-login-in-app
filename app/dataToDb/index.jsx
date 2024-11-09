@@ -1,4 +1,11 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  RefreshControl,
+} from "react-native";
 import React, { useState, useEffect, useLayoutEffect } from "react";
 import NetInfo from "@react-native-community/netinfo";
 import axios from "axios";
@@ -8,12 +15,14 @@ import { Colors } from "./../../constants/Colors";
 import { auth, db } from "./../../configFireBase/configFirebase";
 import { useNavigation, useRouter } from "expo-router";
 
-const user = auth.currentUser;
 export default function Model() {
   const [isConnected, setIsConnected] = useState(false);
   const [isInternetAvailable, setIsInternetAvailable] = useState(false);
+  const [refreshing, setRefreshing] = useState(false); // State for managing refresh
+
   const navigation = useNavigation();
   const route = useRouter();
+  const user = auth.currentUser;
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -54,7 +63,13 @@ export default function Model() {
   }, [isConnected]);
 
   const getStoredData = async () => {
-    console.log(user.email ? user.email : "null ");
+    // Check if the user is authenticated
+    if (!user) {
+      console.log("User is not authenticated");
+      return; // Exit if no user is authenticated
+    }
+
+    console.log(user.email ? user.email : "null");
 
     try {
       const storedData = await AsyncStorage.getItem("wifiConfig");
@@ -75,14 +90,26 @@ export default function Model() {
     }
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true); // Start refreshing
+    // Refresh your data here
+    await getStoredData();
+    setRefreshing(false); // Stop refreshing after data is fetched
+  };
+
   if (isConnected) {
     if (isInternetAvailable) {
       return (
-        <View style={styles.container}>
+        <ScrollView
+          contentContainerStyle={styles.container} // Apply styles here
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
           <TouchableOpacity style={styles.button} onPress={getStoredData}>
             <Text style={styles.buttonText}>Config Device Data</Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       );
     } else {
       return (

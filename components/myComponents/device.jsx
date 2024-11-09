@@ -6,22 +6,20 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import Fontisto from "@expo/vector-icons/Fontisto";
 import { Colors } from "../../constants/Colors";
 
-const Btn = () => {
-  return (
-    <TouchableOpacity
-      style={styles.button}
-      onPress={() => {
-        console.log("its working onpress");
-      }}
-    >
-      <Text style={styles.buttonText}>Create Account </Text>
-    </TouchableOpacity>
-  );
-};
+export default function Device({ btnNumber, deviceName, topic }) {
+  const Btn = ({ buttonIndex }) => {
+    return (
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => {
+          console.log(`${topic} ${buttonIndex + 1}`);
+        }}
+      >
+        <Text style={styles.buttonText}>Create Account</Text>
+      </TouchableOpacity>
+    );
+  };
 
-const btnNumber = 7;
-
-export default function Device() {
   return (
     <View style={styles.centerContainer}>
       <View style={styles.deviceContainer}>
@@ -30,7 +28,7 @@ export default function Device() {
             <TouchableOpacity>
               <MaterialIcons name="router" size={30} color="black" />
             </TouchableOpacity>
-            <Text style={styles.iconText}>Home</Text>
+            <Text style={styles.iconText}>{deviceName}</Text>
           </View>
           <View style={styles.networkIconsContainer}>
             <TouchableOpacity>
@@ -60,7 +58,7 @@ export default function Device() {
         <View style={styles.buttonsRow}>
           <SafeAreaView style={styles.container}>
             {Array.from({ length: btnNumber }, (_, index) => (
-              <Btn key={index} />
+              <Btn key={index} buttonIndex={index} />
             ))}
           </SafeAreaView>
         </View>

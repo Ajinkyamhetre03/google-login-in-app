@@ -7,6 +7,19 @@ import Fontisto from "@expo/vector-icons/Fontisto";
 import { Colors } from "../../constants/Colors";
 
 export default function Device({ btnNumber, deviceName, topic }) {
+  const Btn = ({ buttonIndex }) => {
+    return (
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => {
+          console.log(`${topic} ${buttonIndex + 1}`);
+        }}
+      >
+        <Text style={styles.buttonText}>Create Account</Text>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <View style={styles.centerContainer}>
       <View style={styles.deviceContainer}>
@@ -45,14 +58,7 @@ export default function Device({ btnNumber, deviceName, topic }) {
         <View style={styles.buttonsRow}>
           <SafeAreaView style={styles.container}>
             {Array.from({ length: btnNumber }, (_, index) => (
-              <TouchableOpacity
-                style={styles.button}
-                onPress={() => {
-                  console.log(`${topic} ${index + 1}`);
-                }}
-              >
-                <Text style={styles.buttonText}>Create Account</Text>
-              </TouchableOpacity>
+              <Btn key={index} buttonIndex={index} />
             ))}
           </SafeAreaView>
         </View>

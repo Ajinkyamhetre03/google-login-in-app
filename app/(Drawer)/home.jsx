@@ -24,11 +24,13 @@ const client = new Client(
   `mqtt-async-test-${parseInt(Math.random() * 100)}`
 );
 
+
 export default function Home() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [devices, setDevices] = useState(null);
-  const [refreshing, setRefreshing] = useState(false); // State for refreshing
+  const [refreshing, setRefreshing] = useState(false);
+  const [buttonStates, setButtonStates] = useState({}); // State to track each button's toggle state
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -51,41 +53,45 @@ export default function Home() {
   }, [user]);
 
   useEffect(() => {
-    // Define the success callback
     const onSuccess = () => {
       console.log("Connected to MQTT broker");
-      client.subscribe("test/topic"); // Change to your topic
+      client.subscribe("test/topic");
 
-      // Define message handler
       client.onMessageArrived = (message) => {
         console.log("Received message:", message.payloadString);
       };
     };
 
-    // Define the failure callback
     const onFailure = (error) => {
       console.error("Connection failed:", error);
     };
 
-    // Connect the client with callbacks
     client.connect({
       onSuccess,
       onFailure,
     });
 
-    // Clean up the client on unmount
     return () => {
       if (client.isConnected()) client.disconnect();
     };
   }, []);
 
-  const sendMessage = (topic, index) => {
+  const sendMessage = (topic, deviceName, index) => {
+    const deviceId = `${topic}/${deviceName}/line${index + 1}`;
+    const currentState = buttonStates[deviceId] || "off";
+    const newState = currentState === "on" ? "off" : "on";
+    const msg = `${deviceId}/${newState}`;
+
     if (client.isConnected()) {
-      const input = `${topic} is ON and no is ${index + 1}`; // Fixed string format
-      const message = new Message(input);
-      message.destinationName = "test/topic"; // Replace with your topic
+      const message = new Message(msg);
+      message.destinationName = "test/topic";
       client.send(message);
-      console.log("Message sent:", input);
+      console.log("Message sent:", msg);
+
+      setButtonStates((prevStates) => ({
+        ...prevStates,
+        [deviceId]: newState,
+      }));
     } else {
       console.log("Failed to send message. Ensure client is connected.");
     }
@@ -124,14 +130,7 @@ export default function Home() {
 
   if (loading) {
     return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: Colors.backgroundColor,
-        }}
-      >
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={"black"} />
       </View>
     );
@@ -184,13 +183,33 @@ export default function Home() {
                 <SafeAreaView style={styles.container}>
                   {Array.from({ length: device.numOfDevice }, (_, index) => (
                     <TouchableOpacity
-                      style={styles.button}
-                      onPress={() => {
-                        // console.log(`${device.topic} ${index + 1}`);
-                        sendMessage(device.topic, index);
-                      }}
+                      key={index}
+                      style={[
+                        styles.button,
+                        {
+                          backgroundColor:
+                            buttonStates[
+                              `${device.topic}/${device.deviceName}/line${
+                                index + 1
+                              }`
+                            ] === "on"
+                              ? "white" // Choose a color when button is ON
+                              : Colors.btnbackgroundColor, // Default color when button is OFF
+                        },
+                      ]}
+                      onPress={() =>
+                        sendMessage(device.topic, device.deviceName, index)
+                      }
                     >
-                      <Text style={styles.buttonText}>Create Account</Text>
+                      <Text style={styles.buttonText}>
+                        {buttonStates[
+                          `${device.topic}/${device.deviceName}/line${
+                            index + 1
+                          }`
+                        ] === "on"
+                          ? "Turn Off "
+                          : "Turn On "}
+                      </Text>
                     </TouchableOpacity>
                   ))}
                 </SafeAreaView>
@@ -199,9 +218,7 @@ export default function Home() {
           </View>
         ))
       ) : (
-        <Text style={{ textAlign: "center", marginTop: 20 }}>
-          No devices found.
-        </Text>
+        <Text style={styles.noDevicesText}>No devices found.</Text>
       )}
     </ScrollView>
   );
@@ -264,7 +281,7 @@ const styles = StyleSheet.create({
     margin: 5,
   },
   buttonText: {
-    fontSize: 16,
+    fontSize: 10,
     color: "#000",
   },
   Btn: {
@@ -272,5 +289,15 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     padding: 5,
     borderRadius: 6,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: Colors.backgroundColor,
+  },
+  noDevicesText: {
+    textAlign: "center",
+    marginTop: 20,
   },
 });

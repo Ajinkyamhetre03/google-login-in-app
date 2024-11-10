@@ -18,9 +18,9 @@ import Fontisto from "@expo/vector-icons/Fontisto";
 import { Colors } from "../../constants/Colors";
 import { Client, Message } from "paho-mqtt";
 
-// Update MQTT client to connect via WebSocket
+// MQTT client connection via WebSocket
 const client = new Client(
-  "ws://broker.hivemq.com:8000/mqtt",  // WebSocket URL for HiveMQ broker
+  "ws://broker.hivemq.com:8000/mqtt", // WebSocket URL for HiveMQ broker
   `mqtt-async-test-${parseInt(Math.random() * 100)}`
 );
 
@@ -29,7 +29,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [devices, setDevices] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [buttonStates, setButtonStates] = useState({}); // State to track each button's toggle state
+  const [buttonStates, setButtonStates] = useState({}); // Track button states
+  const [mqttConnected, setMqttConnected] = useState(false); // Track MQTT connection status
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -54,16 +55,18 @@ export default function Home() {
   useEffect(() => {
     const onSuccess = () => {
       console.log("Connected to MQTT broker");
+      setMqttConnected(true); // Set MQTT connection state to true when connected
       client.subscribe("test/topic");
 
       client.onMessageArrived = (message) => {
         console.log("Received message:", message.payloadString);
-        // Handle incoming message logic here (e.g., updating button states based on incoming MQTT messages)
+        // Handle incoming message logic here
       };
     };
 
     const onFailure = (error) => {
       console.error("Connection failed:", error);
+      setMqttConnected(false); // Set MQTT connection state to false on failure
     };
 
     client.connect({
@@ -76,15 +79,15 @@ export default function Home() {
     };
   }, []);
 
-  const sendMessage = (topic, deviceName, index) => {
-    const deviceId = `${topic}/${deviceName}/line${index + 1}`;
-    const currentState = buttonStates[deviceId] || "off";
+  const sendMessage = (topic, deviceName, index, state = null) => {
+    const deviceId = `${topic}/line${index + 1}`;
+    const currentState = state || buttonStates[deviceId] || "off";
     const newState = currentState === "on" ? "off" : "on";
     const msg = `${deviceId}/${newState}`;
 
     if (client.isConnected()) {
       const message = new Message(msg);
-      message.destinationName =topic;
+      message.destinationName = topic;
       client.send(message);
       console.log("Message sent:", msg);
 
@@ -128,6 +131,26 @@ export default function Home() {
     setRefreshing(false);
   };
 
+  const handleTopicOn = (topic) => {
+    devices.forEach((device) => {
+      if (device.topic === topic) {
+        Array.from({ length: device.numOfDevice }, (_, index) => {
+          sendMessage(device.topic, device.deviceName, index, "on");
+        });
+      }
+    });
+  };
+
+  const handleTopicOff = (topic) => {
+    devices.forEach((device) => {
+      if (device.topic === topic) {
+        Array.from({ length: device.numOfDevice }, (_, index) => {
+          sendMessage(device.topic, device.deviceName, index, "off");
+        });
+      }
+    });
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -149,32 +172,23 @@ export default function Home() {
             <View style={styles.deviceContainer}>
               <View style={styles.iconRow}>
                 <View style={styles.homeIconContainer}>
-                  <TouchableOpacity>
-                    <MaterialIcons name="router" size={30} color="black" />
-                  </TouchableOpacity>
+                  
+                    <TouchableOpacity>
+                      <MaterialIcons name="router" size={30} color="black" />
+                    </TouchableOpacity>
+                 
                   <Text style={styles.iconText}>{device.deviceName}</Text>
                 </View>
                 <View style={styles.networkIconsContainer}>
+                {mqttConnected && ( // Show the router icon only when MQTT is connected
                   <TouchableOpacity>
-                    <AntDesign
-                      name="earth"
-                      style={styles.Btn}
-                      size={18}
-                      color="black"
-                    />
+                    <MaterialIcons name="wifi" size={20} color="black" />
                   </TouchableOpacity>
-                  <TouchableOpacity>
-                    <Fontisto
-                      name="wifi"
-                      style={styles.Btn}
-                      size={15}
-                      color="black"
-                    />
-                  </TouchableOpacity>
-                  <TouchableOpacity>
+                   )}
+                  <TouchableOpacity onPress={() => handleTopicOn(device.topic)}>
                     <Text style={styles.Btn}>ON</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity>
+                  <TouchableOpacity onPress={() => handleTopicOff(device.topic)}>
                     <Text style={styles.Btn}>OFF</Text>
                   </TouchableOpacity>
                 </View>
@@ -188,9 +202,11 @@ export default function Home() {
                         styles.button,
                         {
                           backgroundColor:
-                            buttonStates[`${device.topic}/${device.deviceName}/line${index + 1}`] === "on"
-                              ? "white" // Choose a color when button is ON
-                              : Colors.btnbackgroundColor, // Default color when button is OFF
+                            buttonStates[
+                              `${device.topic}/line${index + 1}`
+                            ] === "on"
+                              ? Colors.btnbackgroundColor // Choose a color when button is ON
+                              : Colors.btnbackgroundColorLight, // Default color when button is OFF
                         },
                       ]}
                       onPress={() =>
@@ -198,7 +214,9 @@ export default function Home() {
                       }
                     >
                       <Text style={styles.buttonText}>
-                        {buttonStates[`${device.topic}/${device.deviceName}/line${index + 1}`] === "on"
+                        {buttonStates[
+                          `${device.topic}/${device.deviceName}/line${index + 1}`
+                        ] === "on"
                           ? "Turn Off "
                           : "Turn On "}
                       </Text>
@@ -286,10 +304,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: Colors.backgroundColor,
   },
   noDevicesText: {
-    textAlign: "center",
-    marginTop: 20,
+    fontSize: 18,
+    fontWeight: "bold",
+    color: Colors.textColor,
   },
 });

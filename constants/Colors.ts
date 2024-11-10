@@ -9,6 +9,7 @@ const tintColorDark = '#fff';
 export const Colors = {
   backgroundColor: "#fddaff",
   btnbackgroundColor: "#c984f9",
+  btnbackgroundColorLight: "#deb3fc",
   BtnOn:'#8572E8',
   BtnOff:'#977EF2',
 };

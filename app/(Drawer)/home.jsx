@@ -18,12 +18,11 @@ import Fontisto from "@expo/vector-icons/Fontisto";
 import { Colors } from "../../constants/Colors";
 import { Client, Message } from "paho-mqtt";
 
+// Update MQTT client to connect via WebSocket
 const client = new Client(
-  "broker.hivemq.com",
-  Number(8000),
+  "ws://broker.hivemq.com:8000/mqtt",  // WebSocket URL for HiveMQ broker
   `mqtt-async-test-${parseInt(Math.random() * 100)}`
 );
-
 
 export default function Home() {
   const [user, setUser] = useState(null);
@@ -59,6 +58,7 @@ export default function Home() {
 
       client.onMessageArrived = (message) => {
         console.log("Received message:", message.payloadString);
+        // Handle incoming message logic here (e.g., updating button states based on incoming MQTT messages)
       };
     };
 
@@ -84,7 +84,7 @@ export default function Home() {
 
     if (client.isConnected()) {
       const message = new Message(msg);
-      message.destinationName = "test/topic";
+      message.destinationName =topic;
       client.send(message);
       console.log("Message sent:", msg);
 
@@ -188,11 +188,7 @@ export default function Home() {
                         styles.button,
                         {
                           backgroundColor:
-                            buttonStates[
-                              `${device.topic}/${device.deviceName}/line${
-                                index + 1
-                              }`
-                            ] === "on"
+                            buttonStates[`${device.topic}/${device.deviceName}/line${index + 1}`] === "on"
                               ? "white" // Choose a color when button is ON
                               : Colors.btnbackgroundColor, // Default color when button is OFF
                         },
@@ -202,11 +198,7 @@ export default function Home() {
                       }
                     >
                       <Text style={styles.buttonText}>
-                        {buttonStates[
-                          `${device.topic}/${device.deviceName}/line${
-                            index + 1
-                          }`
-                        ] === "on"
+                        {buttonStates[`${device.topic}/${device.deviceName}/line${index + 1}`] === "on"
                           ? "Turn Off "
                           : "Turn On "}
                       </Text>

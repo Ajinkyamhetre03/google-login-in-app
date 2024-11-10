@@ -13,15 +13,13 @@ import { collection, getDocs } from "firebase/firestore";
 import { useNavigation } from "@react-navigation/native";
 import { TouchableOpacity } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import AntDesign from "@expo/vector-icons/AntDesign";
-import Fontisto from "@expo/vector-icons/Fontisto";
 import { Colors } from "../../constants/Colors";
 import { Client, Message } from "paho-mqtt";
 
 // MQTT client connection via WebSocket
 const client = new Client(
   "ws://broker.hivemq.com:8000/mqtt", // WebSocket URL for HiveMQ broker
-  `mqtt-async-test-${parseInt(Math.random() * 100)}`
+  `mqtt-async-test-${parseInt(Math.random() * 100)}` // Unique client ID
 );
 
 export default function Home() {
@@ -56,11 +54,26 @@ export default function Home() {
     const onSuccess = () => {
       console.log("Connected to MQTT broker");
       setMqttConnected(true); // Set MQTT connection state to true when connected
-      client.subscribe("test/topic");
+
+      // Dynamically subscribe to each device's topic
+      devices.forEach((device) => {
+        client.subscribe(device.topic);
+      });
 
       client.onMessageArrived = (message) => {
         console.log("Received message:", message.payloadString);
-        // Handle incoming message logic here
+
+        // Split the message into its components
+        const [deviceId, line, state] = message.payloadString.split("/");
+
+        // Check if the message matches the expected format
+        if (deviceId && line && state) {
+          // Update the buttonStates based on the received message
+          setButtonStates((prevStates) => ({
+            ...prevStates,
+            [`${deviceId}/${line}`]: state, // Update the state of the specific button
+          }));
+        }
       };
     };
 
@@ -77,7 +90,7 @@ export default function Home() {
     return () => {
       if (client.isConnected()) client.disconnect();
     };
-  }, []);
+  }, [devices]);
 
   const sendMessage = (topic, deviceName, index, state = null) => {
     const deviceId = `${topic}/line${index + 1}`;
@@ -172,23 +185,24 @@ export default function Home() {
             <View style={styles.deviceContainer}>
               <View style={styles.iconRow}>
                 <View style={styles.homeIconContainer}>
-                  
-                    <TouchableOpacity>
-                      <MaterialIcons name="router" size={30} color="black" />
-                    </TouchableOpacity>
-                 
+                  <TouchableOpacity>
+                    <MaterialIcons name="router" size={30} color="black" />
+                  </TouchableOpacity>
+
                   <Text style={styles.iconText}>{device.deviceName}</Text>
                 </View>
                 <View style={styles.networkIconsContainer}>
-                {mqttConnected && ( // Show the router icon only when MQTT is connected
-                  <TouchableOpacity>
-                    <MaterialIcons name="wifi" size={20} color="black" />
-                  </TouchableOpacity>
-                   )}
+                  {mqttConnected && ( // Show the router icon only when MQTT is connected
+                    <TouchableOpacity>
+                      <MaterialIcons name="wifi" size={20} color="black" />
+                    </TouchableOpacity>
+                  )}
                   <TouchableOpacity onPress={() => handleTopicOn(device.topic)}>
                     <Text style={styles.Btn}>ON</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={() => handleTopicOff(device.topic)}>
+                  <TouchableOpacity
+                    onPress={() => handleTopicOff(device.topic)}
+                  >
                     <Text style={styles.Btn}>OFF</Text>
                   </TouchableOpacity>
                 </View>
@@ -202,9 +216,8 @@ export default function Home() {
                         styles.button,
                         {
                           backgroundColor:
-                            buttonStates[
-                              `${device.topic}/line${index + 1}`
-                            ] === "on"
+                            buttonStates[`${device.topic}/line${index + 1}`] ===
+                            "on"
                               ? Colors.btnbackgroundColor // Choose a color when button is ON
                               : Colors.btnbackgroundColorLight, // Default color when button is OFF
                         },
@@ -214,9 +227,8 @@ export default function Home() {
                       }
                     >
                       <Text style={styles.buttonText}>
-                        {buttonStates[
-                          `${device.topic}/${device.deviceName}/line${index + 1}`
-                        ] === "on"
+                        {buttonStates[`${device.topic}/line${index + 1}`] ===
+                        "on"
                           ? "Turn Off "
                           : "Turn On "}
                       </Text>
@@ -283,22 +295,22 @@ const styles = StyleSheet.create({
   },
   button: {
     flexBasis: "22%",
-    height: 80,
-    backgroundColor: Colors.btnbackgroundColor,
+    height: 70,
+    margin: 5,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 20,
-    margin: 5,
+    borderRadius: 10,
   },
   buttonText: {
-    fontSize: 10,
-    color: "#000",
+    color: "black",
+    fontSize: 15,
+    fontWeight: "bold",
   },
   Btn: {
-    marginLeft: 10,
-    backgroundColor: "white",
-    padding: 5,
-    borderRadius: 6,
+    marginLeft: 15,
+    fontSize: 16,
+    color: "black",
+    fontWeight: "bold",
   },
   loadingContainer: {
     flex: 1,
@@ -306,8 +318,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   noDevicesText: {
+    textAlign: "center",
+    marginTop: 10,
     fontSize: 18,
-    fontWeight: "bold",
-    color: Colors.textColor,
+    color: "black",
   },
 });

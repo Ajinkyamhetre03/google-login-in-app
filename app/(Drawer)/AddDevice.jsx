@@ -56,17 +56,17 @@ export default function AddDevice() {
           console.log("MAC Address:", data.macAddress);
           isMacAddressFetched = true; // Successfully fetched MAC address
         } else {
-          ToastAndroid.show(
-            "Failed to get MAC address, retrying...",
-            ToastAndroid.SHORT
-          );
+          // ToastAndroid.show(
+          //   "Failed to get MAC address, retrying...",
+          //   ToastAndroid.SHORT
+          // );
         }
       } catch (error) {
-        console.error("Error fetching MAC address:", error);
-        ToastAndroid.show(
-          "Error fetching MAC address, retrying...",
-          ToastAndroid.SHORT
-        );
+        // console.error("Error fetching MAC address:", error);
+        // ToastAndroid.show(
+        //   "Error fetching MAC address, retrying...",
+        //   ToastAndroid.SHORT
+        // );
       }
       // Delay before trying again if MAC address is not fetched
       if (!isMacAddressFetched) {

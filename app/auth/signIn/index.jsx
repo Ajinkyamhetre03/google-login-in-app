@@ -46,11 +46,12 @@ export default function SignIn() {
     <View style={styles.container}>
       <Text style={styles.title}>Sign In</Text>
 
-      <Image
-        style={styles.image}
-        source={require("./../../../assets/images/Images/signIn.png")}
-      ></Image>
-
+      <View style={styles.imageContainer}>
+        <Image
+          style={styles.image}
+          source={require("./../../../assets/images/Images/signIn.png")}
+        />
+      </View>
       <View style={styles.divInpu}>
         <TextInput
           style={styles.input}
@@ -88,55 +89,63 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
-    height: "100%",
-    width: "100%",
-    padding: 16,
+    paddingHorizontal: 16,
     backgroundColor: Colors.backgroundColor,
   },
   title: {
-    fontSize: 35,
+    fontSize: 32,
     fontWeight: "bold",
     marginBottom: 24,
-    marginTop: "20%",
+    marginTop: "15%",
+    textAlign: "center",
+  },
+  imageContainer: {
+    width: "80%", // Adjusts the image container width for responsiveness
+    height: 200,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: "10%",
   },
   image: {
-    width: "100%",
-    height: "30%",
-    marginTop: "10%",
+    width: "100%", // Image fills the container width
+    height: "100%", // Image fills the container height
+    resizeMode: "contain", // Adjusts image scaling
   },
   divInpu: {
     width: "100%",
-    marginTop: "15%",
+    marginTop: "10%",
   },
   input: {
     width: "100%",
-    padding: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderWidth: 1,
     borderColor: "#747477",
     borderRadius: 8,
-    marginBottom: "5%",
+    marginBottom: 12,
+    fontSize: 16,
+    backgroundColor: "#f8f8f8",
   },
   btnSignIn: {
-    marginTop: "3%",
+    marginTop: "5%",
     backgroundColor: Colors.btnbackgroundColor,
-    padding: 12,
+    paddingVertical: 12,
     borderRadius: 8,
-    fontWeight: "600",
-    color: "#4b4e4e",
     width: "100%",
+    alignItems: "center",
   },
   btnAccount: {
-    marginTop: "20%",
+    marginTop: 20,
     backgroundColor: Colors.btnbackgroundColor,
-    padding: 12,
+    paddingVertical: 12,
     borderRadius: 8,
-    fontWeight: "600",
-    color: "#4b4e4e",
     width: "100%",
+    alignItems: "center",
   },
   buttonText: {
     color: "#fff",
-    fontSize: 20,
-    textAlign: "center",
+    fontSize: 18,
+    fontWeight: "600",
   },
 });
+

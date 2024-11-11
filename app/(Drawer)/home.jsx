@@ -148,7 +148,7 @@ export default function Home() {
     devices.forEach((device) => {
       if (device.topic === topic) {
         Array.from({ length: device.numOfDevice }, (_, index) => {
-          sendMessage(device.topic, device.deviceName, index, "on");
+          sendMessage(device.topic, device.deviceName, index, "off");
         });
       }
     });
@@ -158,7 +158,7 @@ export default function Home() {
     devices.forEach((device) => {
       if (device.topic === topic) {
         Array.from({ length: device.numOfDevice }, (_, index) => {
-          sendMessage(device.topic, device.deviceName, index, "off");
+          sendMessage(device.topic, device.deviceName, index, "on");
         });
       }
     });
@@ -229,8 +229,8 @@ export default function Home() {
                       <Text style={styles.buttonText}>
                         {buttonStates[`${device.topic}/line${index + 1}`] ===
                         "on"
-                          ? "Turn Off "
-                          : "Turn On "}
+                          ? "Turn on "
+                          : "Turn off "}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -316,6 +316,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: Colors.backgroundColor,
   },
   noDevicesText: {
     textAlign: "center",

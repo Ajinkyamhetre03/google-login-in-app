@@ -13,10 +13,52 @@ import Entypo from "@expo/vector-icons/Entypo";
 import { Colors } from "../../constants/Colors";
 import { useRouter } from "expo-router";
 import { auth } from "./../../configFireBase/configFirebase";
+import { Client } from "paho-mqtt";
+import { useEffect, useState } from "react";
+
+// MQTT client connection via WebSocket
+const client = new Client(
+  "ws://broker.hivemq.com:8000/mqtt", // WebSocket URL for HiveMQ broker
+  `mqtt-async-test-${parseInt(Math.random() * 100)}` // Unique client ID
+);
 
 function CustomDrawerContent(props) {
   const user = auth.currentUser;
   const route = useRouter();
+  const [mqttConnected, setMqttConnected] = useState(false);
+
+  // Handle MQTT connection when user logs in
+  useEffect(() => {
+    if (user) {
+      // Connect to MQTT broker when the user is logged in
+      client.connect({
+        onSuccess: () => {
+          console.log("Connected to MQTT broker");
+          setMqttConnected(true);
+        },
+        onFailure: (err) => {
+          console.error("Failed to connect to MQTT broker:", err);
+        },
+      });
+    } else {
+      // Disconnect from MQTT broker if the user is logged out
+      if (mqttConnected) {
+        client.disconnect();
+        console.log("Disconnected from MQTT broker");
+        setMqttConnected(false);
+      }
+    }
+  }, [user]); // This effect runs whenever the `user` changes (login/logout)
+
+  const logoutFromMQTT = () => {
+    if (mqttConnected && client.isConnected()) {
+      client.disconnect();
+      console.log("Disconnected from MQTT broker");
+      setMqttConnected(false); // Update connection state
+      route.replace("/auth/signIn");
+    }
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: Colors.backgroundColor }}>
       <DrawerContentScrollView {...props}>
@@ -26,9 +68,11 @@ function CustomDrawerContent(props) {
             source={require("./../../assets/images/Images/signIn.png")}
           />
         </View>
-        <View style={styles.emailDiv}>
-          <Text style={styles.email}>{user.email}</Text>
-        </View>
+        {user && (
+          <View style={styles.emailDiv}>
+            <Text style={styles.email}>{user.email}</Text>
+          </View>
+        )}
         <DrawerItemList {...props} />
         <DrawerItem
           label="Info"
@@ -36,11 +80,11 @@ function CustomDrawerContent(props) {
           icon={({ color, size }) => (
             <Entypo name="info-with-circle" size={size} color={color} />
           )}
-          labelStyle={{ marginLeft: -10 }} // Small left margin for better alignment
+          labelStyle={{ marginLeft: -10 }}
         />
       </DrawerContentScrollView>
       <View style={styles.divFooter}>
-        <TouchableOpacity onPress={() => route.replace("/auth/signIn")}>
+        <TouchableOpacity onPress={logoutFromMQTT}>
           <Text style={styles.divFooterText}>Logout</Text>
         </TouchableOpacity>
       </View>
@@ -87,7 +131,7 @@ export default function Layout() {
             drawerLabel: "Account",
             title: "Account",
             drawerIcon: ({ color, size }) => (
-              <Ionicons name="person" size={24} color="black" />
+              <Ionicons name="person" size={size} color={color} />
             ),
           }}
         />
@@ -98,13 +142,13 @@ export default function Layout() {
 
 const styles = StyleSheet.create({
   profileDiv: {
-    height: 200, // Adjusted for better compatibility on different devices
+    height: 200,
     width: "100%",
     justifyContent: "center",
     alignItems: "center",
   },
   profileDivImg: {
-    height: "80%", // Adjusted for image responsiveness
+    height: "80%",
     width: "80%",
     borderRadius: 50,
   },

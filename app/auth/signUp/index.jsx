@@ -19,7 +19,6 @@ export default function SignUp() {
   const [password, setPassword] = useState("");
 
   const route = useRouter();
-
   const Navigation = useNavigation();
   useEffect(() => {
     Navigation.setOptions({
@@ -30,19 +29,12 @@ export default function SignUp() {
   const signup = () => {
     createUserWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
-        // Signed up
         route.replace("/(Drawer)/home");
-        const user = userCredential.user;
-        console.log("sign up sucessfull");
-
-        // ...
+        console.log("sign up successful");
       })
       .catch((error) => {
         const errorCode = error.code;
-        const errorMessage = error.message;
         ToastAndroid.show(errorCode, ToastAndroid.BOTTOM);
-
-        // ..
       });
   };
 
@@ -50,10 +42,12 @@ export default function SignUp() {
     <View style={styles.container}>
       <Text style={styles.title}>Sign Up</Text>
 
-      <Image
-        style={styles.image}
-        source={require("./../../../assets/images/Images/signUp.png")}
-      ></Image>
+      <View style={styles.imageContainer}>
+        <Image
+          style={styles.image}
+          source={require("./../../../assets/images/Images/signUp.png")}
+        />
+      </View>
 
       <View style={styles.divInpu}>
         <TextInput
@@ -62,7 +56,6 @@ export default function SignUp() {
           value={name}
           onChangeText={setName}
         />
-
         <TextInput
           style={styles.input}
           placeholder="Email"
@@ -71,7 +64,6 @@ export default function SignUp() {
           keyboardType="email-address"
           autoCapitalize="none"
         />
-
         <TextInput
           style={styles.input}
           placeholder="Password"
@@ -89,7 +81,7 @@ export default function SignUp() {
         style={styles.btnAccount}
         onPress={() => route.replace("/auth/signIn")}
       >
-        <Text style={styles.buttonText}> Already i have account </Text>
+        <Text style={styles.buttonText}> Already have an account </Text>
       </TouchableOpacity>
     </View>
   );
@@ -99,55 +91,62 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
-    height: "100%",
-    width: "100%",
-    padding: 16,
+    paddingHorizontal: 16,
     backgroundColor: Colors.backgroundColor,
   },
   title: {
-    fontSize: 35,
+    fontSize: 32,
     fontWeight: "bold",
-    marginBottom: "6%",
-    marginTop: "20%",
+    marginBottom: "5%",
+    marginTop: "15%",
+    textAlign: "center",
+  },
+  imageContainer: {
+    width: "80%", // Adjusted width for responsiveness
+    height: 200,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: "5%",
   },
   image: {
     width: "100%",
-    height: "30%",
-    marginTop: "5%",
+    height: "100%",
+    resizeMode: "contain",
   },
   divInpu: {
     width: "100%",
-    marginTop: "15%",
+    marginTop: "10%",
   },
   input: {
     width: "100%",
-    padding: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderWidth: 1,
     borderColor: "#747477",
     borderRadius: 8,
-    marginBottom: "5%",
+    marginBottom: 12,
+    fontSize: 16,
+    backgroundColor: "#f8f8f8",
   },
   btnSignIn: {
-    marginTop: "3%",
+    marginTop: "5%",
     backgroundColor: Colors.btnbackgroundColor,
-    padding: 12,
+    paddingVertical: 12,
     borderRadius: 8,
-    fontWeight: "600",
-    color: "#4b4e4e",
     width: "100%",
+    alignItems: "center",
   },
   btnAccount: {
-    marginTop: "20%",
+    marginTop: 20,
     backgroundColor: Colors.btnbackgroundColor,
-    padding: 12,
+    paddingVertical: 12,
     borderRadius: 8,
-    fontWeight: "600",
-    color: "#4b4e4e",
     width: "100%",
+    alignItems: "center",
   },
   buttonText: {
     color: "#fff",
-    fontSize: 20,
-    textAlign: "center",
+    fontSize: 18,
+    fontWeight: "600",
   },
 });
